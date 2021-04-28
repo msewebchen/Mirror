@@ -32,7 +32,6 @@ const inviteCodes = [
   `flhiK7ng@eU9Yab2yM_ok8D_cwnQUhQ`,
   `flhiK7ng@eU9Yab2yM_ok8D_cwnQUhQ`
 ]
-
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
     cookiesArr.push(jdCookieNode[item])
@@ -54,7 +53,7 @@ let allMessage = '';
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
-      $.UserName = decodeURIComponent(cookie.match(/pt_pin=(.+?);/) && cookie.match(/pt_pin=(.+?);/)[1])
+      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
       $.index = i + 1;
       $.isLogin = true;
       $.nickName = '';
@@ -88,9 +87,17 @@ async function jdCash() {
   await shareCodesFormat()
   await helpFriends()
   await getReward()
-  await getReward('2')
+  await getReward('2');
+  $.exchangeBeanNum = 0;
+  console.log(`\n\n开始花费2元红包兑换200京豆，一周可换四次`)
+  for (let i = 0; i < 4; i++) {
+    await exchange2();//兑换200京豆(2元红包换200京豆，一周四次。)
+  }
+  if ($.exchangeBeanNum) {
+    message += `兑换京豆成功，获得${$.exchangeBeanNum}京豆\n`;
+  }
   await index(true)
-  await showMsg()
+  // await showMsg()
 }
 function index(info=false) {
   return new Promise((resolve) => {
@@ -108,11 +115,11 @@ function index(info=false) {
                   message += `当前现金：${data.data.result.signMoney}元`;
                   allMessage += `京东账号${$.index}${$.nickName}\n${message}${$.index !== cookiesArr.length ? '\n\n' : ''}`;
                 }
-                message += `当前现金：${data.data.result.signMoney}元`;
+                console.log(`\n\n当前现金：${data.data.result.signMoney}元`);
                 return
               }
               // console.log(`您的助力码为${data.data.result.inviteCode}`)
-              console.log(`\n【京东账号${$.index}（${$.nickName || $.UserName}）的${$.name}好友互助码】${data.data.result.inviteCode}\n`);
+              console.log(`\n【京东账号${$.index}（${$.UserName}）的${$.name}好友互助码】${data.data.result.inviteCode}\n`);
               let helpInfo = {
                 'inviteCode': data.data.result.inviteCode,
                 'shareDate': data.data.result.shareDate
@@ -162,14 +169,14 @@ async function helpFriends() {
     if(!$.canHelp) break
     await $.wait(1000)
   }
-   if (helpAuthor && $.authorCode) {
-     for(let helpInfo of $.authorCode){
-       console.log(`去帮助好友${helpInfo['inviteCode']}`)
-       await helpFriend(helpInfo)
-       if(!$.canHelp) break
-       await $.wait(1000)
-     }
-   }
+  // if (helpAuthor && $.authorCode) {
+  //   for(let helpInfo of $.authorCode){
+  //     console.log(`去帮助好友${helpInfo['inviteCode']}`)
+  //     await helpFriend(helpInfo)
+  //     if(!$.canHelp) break
+  //     await $.wait(1000)
+  //   }
+  // }
 }
 function helpFriend(helpInfo) {
   return new Promise((resolve) => {
@@ -253,7 +260,46 @@ function getReward(source = 1) {
     })
   })
 }
-
+function exchange2() {
+  let body = 'body=%7B%22node%22%3A%22-1%22%2C%22configVersion%22%3A%221.0%22%7D&client=apple&clientVersion=9.4.6&openudid=ad9e83697b055306e6b5c1d78bf341d8dd990644&sign=3a5351d59e976ac3c75e55d840fa82c0&st=1616142615135&sv=102&uuid=hjudwgohxzVu96krv%2FT6Hg%3D%3D'
+  return new Promise((resolve) => {
+    const options = {
+      url: `${JD_API_HOST}?functionId=cash_exchangeBeans&t=${Date.now()}`,
+      body: body,
+      headers: {
+        'Cookie': cookie,
+        'Host': 'api.m.jd.com',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.2.2;14.2;%E4%BA%AC%E4%B8%9C/9.2.2 CFNetwork/1206 Darwin/20.1.0"),
+        'Accept-Language': 'zh-cn',
+        'Accept-Encoding': 'gzip, deflate, br',
+      }
+    }
+    $.post(options, async (err, resp, data) => {
+      try {
+        if (err) {
+          console.log(`${JSON.stringify(err)}`)
+          console.log(`${$.name} API请求失败，请检查网路重试`)
+        } else {
+          if (safeGet(data)) {
+            data = JSON.parse(data);
+            if (data.code === 0 && data.data && data.data.bizCode === 0) {
+              console.log(`花费2元红包兑换200成功！获得${data.data.result.beanName}`)
+              $.exchangeBeanNum += data.data.result.beanName;
+            } else {
+              console.log('花费2元红包兑换200京豆失败：' + data.data.bizMsg)
+            }
+          }
+        }
+      } catch (e) {
+        $.logErr(e, resp)
+      } finally {
+        resolve(data);
+      }
+    })
+  })
+}
 function showMsg() {
   return new Promise(resolve => {
     if (!jdNotify) {
@@ -267,7 +313,7 @@ function showMsg() {
 function readShareCode() {
   console.log(`开始`)
   return new Promise(async resolve => {
-    $.get({url: `https://code.chiang.fun/api/v1/jd/jdcash/read/0/`, 'timeout': 10000}, (err, resp, data) => {
+    $.get({url: `https://code.chiang.fun/api/v1/jd/jdcash/read/0}/`, 'timeout': 10000}, (err, resp, data) => {
       try {
         if (err) {
           console.log(`${JSON.stringify(err)}`)
@@ -364,7 +410,7 @@ function taskUrl(functionId, body = {}) {
       'Connection': 'keep-alive',
       'Content-Type': 'application/json',
       'Referer': 'http://wq.jd.com/wxapp/pages/hd-interaction/index/index',
-      'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.2.2;14.2;%E4%BA%AC%E4%B8%9C/9.2.2 CFNetwork/1206 Darwin/20.1.0"),
+      'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1"),
       'Accept-Language': 'zh-cn',
       'Accept-Encoding': 'gzip, deflate, br',
     }
@@ -375,7 +421,7 @@ function getAuthorShareCode(url = "http://adguard.b.freefrp.net/jd_cash.json") {
   return new Promise(resolve => {
     $.get({url, headers:{
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
-      }}, async (err, resp, data) => {
+      }, timeout: 200000,}, async (err, resp, data) => {
       $.authorCode = [];
       try {
         if (err) {
@@ -394,7 +440,7 @@ function getAuthorShareCode2(url = "http://adguard.b.freefrp.net/jd_cash.json") 
   return new Promise(resolve => {
     $.get({url, headers:{
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
-      }}, async (err, resp, data) => {
+      }, timeout: 200000,}, async (err, resp, data) => {
       $.authorCode2 = [];
       try {
         if (err) {
@@ -424,7 +470,7 @@ function TotalBean() {
         "Connection": "keep-alive",
         "Cookie": cookie,
         "Referer": "https://wqs.jd.com/my/jingdou/my.shtml?sceneval=2",
-        "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.2.2;14.2;%E4%BA%AC%E4%B8%9C/9.2.2 CFNetwork/1206 Darwin/20.1.0")
+        "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1")
       }
     }
     $.post(options, (err, resp, data) => {

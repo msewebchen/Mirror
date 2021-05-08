@@ -89,7 +89,7 @@ if ($.isNode()) {
         },
         'iihon': '有点东西进账'
     };
-    $['log']('脚本版本 210508\n更新时间:2021-05-08 14:51\n仓库：https://github.com/msechen/script/edit/main/');
+    $['log']('脚本版本 210508\n更新时间:2021-05-08 14:51');
     if (!cookiesArr[0x0]) {
         $['msg']($['name'], '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', _0x1a63e3['RXnuX'], {
             'open-url': _0x1a63e3['RXnuX']

@@ -96,7 +96,7 @@ if ($.isNode()) {
         });
         return;
     }
-    #活动ID更改位置
+    #本期活动ID更改位置
     $['appId'] = '1EFRYxg';
     for (let _0x50b253 = 0x0; _0x1a63e3['bzrKr'](_0x50b253, cookiesArr['length']); _0x50b253++) {
         if (cookiesArr[_0x50b253]) {

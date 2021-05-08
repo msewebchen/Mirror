@@ -96,7 +96,7 @@ if ($.isNode()) {
         });
         return;
     }
-    $['appId'] = '1EFRWyg';
+    $['appId'] = '1EFRYxg';
     for (let _0x50b253 = 0x0; _0x1a63e3['bzrKr'](_0x50b253, cookiesArr['length']); _0x50b253++) {
         if (cookiesArr[_0x50b253]) {
             cookie = cookiesArr[_0x50b253];

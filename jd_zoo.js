@@ -56,8 +56,7 @@ if ($.isNode()) {
       '地图任务：未完成，后期添加\n' +
       '金融APP任务：未完成，后期添加\n' +
       '活动时间：2021-05-24至2021-06-20\n' +
-      '更新时间：2021-05-25');
-  await requireConfig();
+      '脚本更新时间：2021-05-25');
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       $.cookie = cookiesArr[i];
@@ -75,7 +74,6 @@ if ($.isNode()) {
   for (let i = 0; i < cookiesArr.length; i++) {
     $.cookie = cookiesArr[i];
     $.canHelp = true;
-    $.max = false;
     $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
     if (!$.secretpInfo[$.UserName]) {
       continue;
@@ -112,50 +110,8 @@ if ($.isNode()) {
       $.done();
     })
 
-//格式化助力码
-function shareCodesFormat() {
-  return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
-    if ($.shareCodesArr[$.index - 1]) {
-      $.pkInviteList = $.shareCodesArr[$.index - 1].split('@');
-    } else {
-      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
-    }
-    // console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.pkInviteList)}`)
-    resolve();
-  })
-}
-
-function requireConfig() {
-  return new Promise(resolve => {
-    console.log(`开始获取${$.name}配置文件\n`);
-    let shareCodes = [];
-    if ($.isNode()) {
-      if (process.env.JDZOO_PK_CODES) {
-        if (process.env.JDZOO_PK_CODES.indexOf('\n') > -1) {
-          shareCodes = process.env.JDZOO_PK_CODES.split('\n');
-        } else {
-          shareCodes = process.env.JDZOO_PK_CODES.split('&');
-        }
-      }
-    }
-    console.log(`共${cookiesArr.length}个京东账号\n`);
-    $.shareCodesArr = [];
-    if ($.isNode()) {
-      Object.keys(shareCodes).forEach((item) => {
-        if (shareCodes[item]) {
-          $.shareCodesArr.push(shareCodes[item])
-        }
-      })
-    }
-    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
-    resolve()
-  })
-}
-
 async function zoo() {
   try {
-    await shareCodesFormat();
     $.signSingle = {};
     $.homeData = {};
     $.secretp = ``;
@@ -198,7 +154,7 @@ async function zoo() {
     for (let i = 0; i < $.taskList.length && $.secretp; i++) {
       $.oneTask = $.taskList[i];
       if ([1, 3, 5, 7, 9, 26].includes($.oneTask.taskType) && $.oneTask.status === 1) {
-        $.activityInfoList = $.oneTask.shoppingActivityVos || $.oneTask.brandMemberVos || $.oneTask.followShopVo || $.oneTask.browseShopVo
+        $.activityInfoList = $.oneTask.shoppingActivityVos || $.oneTask.brandMemberVos || $.oneTask.followShopVo || $.oneTask.browseShopVo;
         for (let j = 0; j < $.activityInfoList.length; j++) {
           $.oneActivityInfo = $.activityInfoList[j];
           if ($.oneActivityInfo.status !== 1 || !$.oneActivityInfo.taskToken) {
@@ -229,14 +185,38 @@ async function zoo() {
         await takePostRequest('zoo_raise');
       }
     }
+    //==================================微信任务========================================================================
+    //functionId=zoo_getTaskDetail&body={"appSign":"2","channel":1,"shopSign":""}&client=wh5&clientVersion=1.0.0
+    $.wxTaskList = [];
+    await takePostRequest('wxTaskDetail');
+    for (let i = 0; i < $.wxTaskList.length; i++) {
+      $.oneTask = $.wxTaskList[i];
+      if($.oneTask.taskType === 2 || $.oneTask.status !== 1){continue;} //不做加购
+      $.activityInfoList = $.oneTask.shoppingActivityVos || $.oneTask.brandMemberVos || $.oneTask.followShopVo || $.oneTask.browseShopVo;
+      for (let j = 0; j < $.activityInfoList.length; j++) {
+        $.oneActivityInfo = $.activityInfoList[j];
+        if ($.oneActivityInfo.status !== 1 || !$.oneActivityInfo.taskToken) {
+          continue;
+        }
+        $.callbackInfo = {};
+        console.log(`做任务：${$.oneActivityInfo.title || $.oneActivityInfo.taskName || $.oneActivityInfo.shopName};等待完成`);
+        await takePostRequest('zoo_collectScore');
+        if ($.callbackInfo.code === 0 && $.callbackInfo.data && $.callbackInfo.data.result && $.callbackInfo.data.result.taskToken) {
+          await $.wait(8000);
+          let sendInfo = encodeURIComponent(`{"dataSource":"newshortAward","method":"getTaskAward","reqParams":"{\\"taskToken\\":\\"${$.callbackInfo.data.result.taskToken}\\"}","sdkVersion":"1.0.0","clientLanguage":"zh"}`)
+          await callbackResult(sendInfo)
+        } else  {
+          await $.wait(2000);
+          console.log(`任务完成`);
+        }
+      }
+    }
     //助力
-     for (let i = 0; i < $.inviteList.length; i++) {
-         $.inviteId = $.inviteList[i];
-         if(!$.max){
-         await takePostRequest('help');
-         await $.wait(2000);
-         }
-     }
+    // for (let i = 0; i < $.inviteList.length; i++) {
+    //     $.inviteId = $.inviteList[i];
+    //     await takePostRequest('help');
+    //     await $.wait(2000);
+    // }
     //======================================================怪兽大作战==============================================================================================================
     $.pkHomeData = {};
     await takePostRequest('zoo_pk_getHomeData');
@@ -268,22 +248,16 @@ async function zoo() {
     await takePostRequest('zoo_pk_getTaskDetail');
     let skillList = $.pkHomeData.result.groupInfo.skillList || [];
     //activityStatus === 1未开始，2 已开始
-    for (let i = 0; i < skillList.length && $.pkHomeData.result.activityStatus === 2; i++) {
+    $.doSkillFlag = true;
+    for (let i = 0; i < skillList.length && $.pkHomeData.result.activityStatus === 2 && $.doSkillFlag; i++) {
       if (Number(skillList[i].num) > 0) {
         $.skillCode = skillList[i].code;
-        for (let j = 0; j < Number(skillList[i].num); j++) {
+        for (let j = 0; j < Number(skillList[i].num) && $.doSkillFlag; j++) {
           console.log(`使用技能`);
           await takePostRequest('zoo_pk_doPkSkill');
           await $.wait(2000);
         }
       }
-    }
-    //pk助力
-    console.log(`\n******开始pk助力*********\n`);
-    for (let i = 0; i < $.pkInviteList.length; i++) {
-      console.log(`${$.UserName} 去助力PK码 ${$.pkInviteList[i]}`);
-      $.pkInviteId = $.pkInviteList[i];
-      await takePostRequest('pkHelp');
     }
   } catch (e) {
     $.logErr(e)
@@ -361,6 +335,10 @@ async function takePostRequest(type) {
       body = `functionId=zoo_sign&body={}&client=wh5&clientVersion=1.0.0`;
       myRequest = await getPostRequest(`zoo_sign`,body);
       break;
+    case 'wxTaskDetail':
+      body = `functionId=zoo_getTaskDetail&body={"appSign":"2","channel":1,"shopSign":""}&client=wh5&clientVersion=1.0.0`;
+      myRequest = await getPostRequest(`zoo_getTaskDetail`,body);
+      break;
     default:
       console.log(`错误${type}`);
   }
@@ -434,7 +412,7 @@ async function dealReturn(type, data) {
       if (data.data.bizCode === 0) console.log(`助力成功`);
       if (data.data.bizCode === -201) {
         console.log(`助力已满`);
-        $.max = true;
+        $.oneInviteInfo.max = true;
       }
       if (data.data.bizCode === -202) console.log(`已助力`);
       if (data.data.bizCode === -8) console.log(`已经助力过该队伍`);
@@ -461,12 +439,16 @@ async function dealReturn(type, data) {
       break;
     case 'zoo_pk_doPkSkill':
       if (data.data.bizCode === 0) console.log(`使用成功`);
-      break
+      if (data.data.bizCode === -2) {
+        console.log(`队伍任务已经完成，无法释放技能!`);
+        $.doSkillFlag = false;
+      }
+      break;
     case 'zoo_getSignHomeData':
       if(data.code === 0) {
         $.signHomeData = data.data.result;
       }
-      break
+      break;
     case 'zoo_sign':
       if(data.code === 0 && data.data.bizCode === 0) {
         console.log(`签到获得成功`);
@@ -475,7 +457,12 @@ async function dealReturn(type, data) {
         console.log(`签到失败`);
         console.log(data);
       }
-      break
+      break;
+    case 'wxTaskDetail':
+      if (data.code === 0) {
+        $.wxTaskList = data.data.result.taskVos;
+      }
+      break;
     default:
       console.log(`未判断的异常${type}`);
   }

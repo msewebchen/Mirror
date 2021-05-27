@@ -6,10 +6,10 @@ author:star
 邀请好友助力：内部账号自行互助(排名靠前账号得到的机会多)
 PK互助：内部账号自行互助(排名靠前账号得到的机会多),多余的助力次数会默认助力作者内置助力码
 小程序任务：已完成
-地图任务：已添加，抽奖未添加
+地图任务：已添加，下午2点到5点执行,抽奖已添加(基本都是优惠券)
 金融APP任务：已完成
 活动时间：2021-05-24至2021-06-20
-脚本更新时间：2021-05-26 20:50
+脚本更新时间：2021-05-27 13:30
 脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
 ===================quantumultx================
 [task_local]
@@ -30,7 +30,7 @@ const $ = new Env('618动物联萌');
 const notify = $.isNode() ? require('./sendNotify') : '';
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const pKHelpFlag = true;//是否PK助力  true 助力，false 不助力
-const pKHelpAuthorFlag = true;//是否助力作者PK  true 助力，false 不助力
+const pKHelpAuthorFlag = false;//是否助力作者PK  true 助力，false 不助力
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [];
 $.cookie = '';
@@ -58,13 +58,16 @@ if ($.isNode()) {
     return;
   }
   console.log('活动入口：京东APP-》搜索 玩一玩-》瓜分20亿\n' +
-    '邀请好友助力：内部账号自行互助(排名靠前账号得到的机会多)\n' +
-    'PK互助：内部账号自行互助(排名靠前账号得到的机会多),多余的助力次数会默认助力作者内置助力码\n' +
-    '小程序任务：已完成\n' +
-    '地图任务：已添加，抽奖暂未添加\n' +
-    '金融APP任务：已完成\n' +
-    '活动时间：2021-05-24至2021-06-20\n' +
-    '脚本更新时间：2021-05-26 20:50');
+      '邀请好友助力：内部账号自行互助(排名靠前账号得到的机会多)\n' +
+      'PK互助：内部账号自行互助(排名靠前账号得到的机会多),多余的助力次数会默认助力作者内置助力码\n' +
+      '小程序任务：已完成\n' +
+      '地图任务：已添加，下午2点到5点执行,抽奖已添加\n' +
+      '金融APP任务：已完成\n' +
+      '活动时间：2021-05-24至2021-06-20\n' +
+      '脚本更新时间：2021-05-26 20:50');
+  await requireConfig();
+    $.canHelp = true;
+    $.max = false;
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       $.cookie = cookiesArr[i];
@@ -85,15 +88,15 @@ if ($.isNode()) {
       await zoo()
     }
   }
-  let res = [];
-  if (new Date().getUTCHours() + 8 >= 17) res = await getAuthorShareCode() || [];
-  if (pKHelpAuthorFlag) {
-    $.innerPkInviteList = getRandomArrayElements([...$.innerPkInviteList, ...res], [...$.innerPkInviteList, ...res].length);
+   /*if(pKHelpAuthorFlag){
+    $.innerPkInviteList = $.innerPkInviteList.sort(()=>Math.random() - 0.5);
     $.pkInviteList.push(...$.innerPkInviteList);
   }
+ 
   for (let i = 0; i < cookiesArr.length; i++) {
     $.cookie = cookiesArr[i];
     $.canHelp = true;
+    $.max = false;
     $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
     if (!$.secretpInfo[$.UserName]) {
       continue;
@@ -124,7 +127,7 @@ if ($.isNode()) {
       await takePostRequest('help');
       await $.wait(2000);
     }
-  }
+  }*/
 })()
   .catch((e) => {
     $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
@@ -133,8 +136,50 @@ if ($.isNode()) {
     $.done();
   })
 
+//格式化助力码
+function shareCodesFormat() {
+  return new Promise(async resolve => {
+    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
+    if ($.shareCodesArr[$.index - 1]) {
+      $.pkInviteList = $.shareCodesArr[$.index - 1].split('@');
+    } else {
+      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
+    }
+    // console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.pkInviteList)}`)
+    resolve();
+  })
+}
+
+function requireConfig() {
+  return new Promise(resolve => {
+    console.log(`开始获取${$.name}配置文件\n`);
+    let shareCodes = [];
+    if ($.isNode()) {
+      if (process.env.JDZOO_PK_CODES) {
+        if (process.env.JDZOO_PK_CODES.indexOf('\n') > -1) {
+          shareCodes = process.env.JDZOO_PK_CODES.split('\n');
+        } else {
+          shareCodes = process.env.JDZOO_PK_CODES.split('&');
+        }
+      }
+    }
+    console.log(`共${cookiesArr.length}个京东账号\n`);
+    $.shareCodesArr = [];
+    if ($.isNode()) {
+      Object.keys(shareCodes).forEach((item) => {
+        if (shareCodes[item]) {
+          $.shareCodesArr.push(shareCodes[item])
+        }
+      })
+    }
+    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
+    resolve()
+  })
+}
+
 async function zoo() {
   try {
+    await shareCodesFormat();
     $.signSingle = {};
     $.homeData = {};
     $.secretp = ``;
@@ -159,8 +204,6 @@ async function zoo() {
     }else{
       console.log(`已签到`);
     }
-    //await takePostRequest('zoo_getFeedDetail');
-    //await $.wait(1000);
     let raiseInfo = $.homeData.result.homeMainInfo.raiseInfo;
     if (Number(raiseInfo.totalScore) > Number(raiseInfo.nextLevelScore) && raiseInfo.buttonStatus === 1) {
       console.log(`满足升级条件，去升级`);
@@ -198,6 +241,23 @@ async function zoo() {
             console.log(`任务失败`);
             await $.wait(3000);
           }
+        }
+      }else if ($.oneTask.taskType == 2 && $.oneTask.status === 1){
+        console.log(`做任务：${$.oneTask.taskName};等待完成 (实际不会添加到购物车)`);
+        $.taskId = $.oneTask.taskId;
+        $.feedDetailInfo = {};
+        await takePostRequest('zoo_getFeedDetail');
+        let productList = $.feedDetailInfo.productInfoVos;
+        let needTime = Number($.feedDetailInfo.maxTimes) - Number($.feedDetailInfo.times);
+        for (let j = 0; j < productList.length && needTime > 0; j++) {
+          if(productList[j].status !== 1){
+            continue;
+          }
+          $.taskToken = productList[j].taskToken;
+          console.log(`加购：${productList[j].skuName}`);
+          await takePostRequest('add_car');
+          await $.wait(1000);
+          needTime --;
         }
       }
       await takePostRequest('zoo_getHomeData');
@@ -264,14 +324,14 @@ async function zoo() {
             }
           }
         }
-        // await $.wait(1000);
-        // let boxLotteryNum = $.shopResult.boxLotteryNum;
-        // for (let j = 0; j < boxLotteryNum; j++) {
-        //   console.log(`开始第${j+1}次拆盒`)
-        //   //抽奖
-        //   await takePostRequest('zoo_boxShopLottery');
-        //   await $.wait(3000);
-        // }
+        await $.wait(1000);
+        let boxLotteryNum = $.shopResult.boxLotteryNum;
+        for (let j = 0; j < boxLotteryNum; j++) {
+          console.log(`开始第${j+1}次拆盒`)
+          //抽奖
+          await takePostRequest('zoo_boxShopLottery');
+          await $.wait(3000);
+        }
         // let wishLotteryNum = $.shopResult.wishLotteryNum;
         // for (let j = 0; j < wishLotteryNum; j++) {
         //   console.log(`开始第${j+1}次能量抽奖`)
@@ -323,7 +383,15 @@ async function zoo() {
         console.log(`任务：${$.jdjrTaskList[i].name},已完成`);
       }
     }
-    //======================================================怪兽大作战=================================================================================
+    //助力
+     for (let i = 0; i < $.inviteList.length; i++) {
+         $.inviteId = $.inviteList[i];
+         if(!$.max){
+         await takePostRequest('help');
+         await $.wait(2000);
+         }
+     }
+    //======================================================怪兽大作战==============================================================================================================
     $.pkHomeData = {};
     await takePostRequest('zoo_pk_getHomeData');
     if (JSON.stringify($.pkHomeData) === '{}') {
@@ -365,6 +433,17 @@ async function zoo() {
         }
       }
     }
+     //pk助力
+    if (new Date().getUTCHours() + 8 >= 9) {
+     console.log(`\n******开始pk助力*********\n`);
+     for (let i = 0; i < $.pkInviteList.length; i++) {
+       if($.canHelp){
+         console.log(`${$.UserName} 去助力PK码 ${$.pkInviteList[i]}`);
+         $.pkInviteId = $.pkInviteList[i];
+         await takePostRequest('pkHelp');
+       }
+     }
+    }
   } catch (e) {
     $.logErr(e)
   }
@@ -391,7 +470,7 @@ async function takePostRequest(type) {
       myRequest = await getPostRequest(`zoo_collectProduceScore`, body);
       break;
     case 'zoo_getFeedDetail':
-      body = `functionId=zoo_getFeedDetail&body={}&client=wh5&clientVersion=1.0.0`;
+      body = `functionId=zoo_getFeedDetail&body={"taskId":"${$.taskId}"}&client=wh5&clientVersion=1.0.0`;
       myRequest = await getPostRequest(`zoo_getFeedDetail`, body);
       break;
     case 'zoo_getTaskDetail':
@@ -481,6 +560,10 @@ async function takePostRequest(type) {
       body = `reqData={"eid":"","sdkToken":"jdd014JYKVE2S6UEEIWPKA4B5ZKBS4N6Y6X5GX2NXL4IYUMHKF3EEVK52RQHBYXRZ67XWQF5N7XB6Y2YKYRTGQW4GV5OFGPDPFP3MZINWG2A01234567","id":"${$.taskId}"}`;
       myRequest = await getPostRequest(`acceptTask`,body);
       break;
+    case 'add_car':
+      body = getBody(type);
+      myRequest = await getPostRequest(`zoo_collectScore`,body);
+      break;
     default:
       console.log(`错误${type}`);
   }
@@ -557,7 +640,7 @@ async function dealReturn(type, data) {
           break;
         case -201:
           console.log(`助力已满`);
-          $.oneInviteInfo.max = true;
+          $.max = true;
           break;
         case -202:
           console.log(`已助力`);
@@ -587,6 +670,10 @@ async function dealReturn(type, data) {
       }
       break;
     case 'zoo_getFeedDetail':
+      if (data.code === 0) {
+        $.feedDetailInfo = data.data.result.addProductVos[0];
+      }
+      break;
     case 'zoo_pk_collectScore':
       break;
     case 'zoo_pk_doPkSkill':
@@ -636,7 +723,22 @@ async function dealReturn(type, data) {
       }
       break
     case 'zoo_boxShopLottery':
-      console.log(JSON.stringify(data));
+      let result = data.data.result;
+      switch (result.awardType) {
+        case 8:
+          console.log(`获得金币：${result.rewardScore}`);
+          break;
+        case 5:
+          console.log(`获得：adidas能量`);
+          break;
+        case 2:
+        case 3:
+          console.log(`获得优惠券：${result.couponInfo.usageThreshold} 优惠：${result.couponInfo.quota}，${result.couponInfo.useRange}`);
+          break;
+        default:
+          console.log(`抽奖获得未知`);
+          console.log(JSON.stringify(data));
+      }
       break
     case 'zoo_wishShopLottery':
       console.log(JSON.stringify(data));
@@ -661,6 +763,19 @@ async function dealReturn(type, data) {
         console.log(`领任务成功`);
       }
       break;
+    case 'add_car':
+      if (data.code === 0) {
+        let acquiredScore = data.data.result.acquiredScore;
+        if(Number(acquiredScore) > 0){
+          console.log(`加购成功,获得金币:${acquiredScore}`);
+        }else{
+          console.log(`加购成功`);
+        }
+      }else{
+        console.log(JSON.stringify(data));
+        console.log(`加购失败`);
+      }
+      break
     default:
       console.log(`未判断的异常${type}`);
   }
@@ -764,7 +879,9 @@ function getBody(type) {
     taskBody = `functionId=zoo_collectProduceScore&body={"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_0\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}"}&client=wh5&clientVersion=1.0.0`;
   } else if(type === 'zoo_getWelfareScore'){
     taskBody = `functionId=zoo_getWelfareScore&body={"type":2,"currentScence":${$.currentScence},"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}"}&client=wh5&clientVersion=1.0.0`;
-  } else {
+  } else if(type === 'add_car'){
+    taskBody = `functionId=${type}&body={"taskId":"${$.taskId}","taskToken":"${$.taskToken}","actionType":1,"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}"}&client=wh5&clientVersion=1.0.0`
+  }else{
     taskBody = `functionId=${type}&body={"taskId":"${$.oneTask.taskId}","taskToken":"${$.oneActivityInfo.taskToken}","actionType":1,"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}","itemId":"${$.oneActivityInfo.itemId}","shopSign":"${$.shopSign}"}&client=wh5&clientVersion=1.0.0`
   }
   return taskBody
@@ -785,26 +902,6 @@ function getRandomArrayElements(arr, count) {
     shuffled[i] = temp;
   }
   return shuffled.slice(min);
-}
-function getAuthorShareCode(url = "http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json") {
-  return new Promise(async resolve => {
-    $.get({url,headers:{
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
-      }, "timeout": 10000}, async (err, resp, data) => {
-      try {
-        if (err) {
-        } else {
-          if (data) data = JSON.parse(data)
-        }
-      } catch (e) {
-        // $.logErr(e, resp)
-      } finally {
-        resolve(data || []);
-      }
-    })
-    await $.wait(10000)
-    resolve();
-  })
 }
 
 function TotalBean() {

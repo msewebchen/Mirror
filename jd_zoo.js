@@ -9,7 +9,7 @@ PK互助：内部账号自行互助(排名靠前账号得到的机会多),多余
 地图任务：已添加，下午2点到5点执行,抽奖已添加(基本都是优惠券)
 金融APP任务：已完成
 活动时间：2021-05-24至2021-06-20
-脚本更新时间：2021-05-27 13:30
+脚本更新时间：2021-05-27 20:55
 脚本兼容: QuantumultX, Surge, Loon, JSBox, Node.js
 ===================quantumultx================
 [task_local]
@@ -30,7 +30,7 @@ const $ = new Env('618动物联萌');
 const notify = $.isNode() ? require('./sendNotify') : '';
 const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
 const pKHelpFlag = true;//是否PK助力  true 助力，false 不助力
-const pKHelpAuthorFlag = false;//是否助力作者PK  true 助力，false 不助力
+const pKHelpAuthorFlag = true;//是否助力作者PK  true 助力，false 不助力
 //IOS等用户直接用NobyDa的jd cookie
 let cookiesArr = [];
 $.cookie = '';
@@ -65,9 +65,6 @@ if ($.isNode()) {
       '金融APP任务：已完成\n' +
       '活动时间：2021-05-24至2021-06-20\n' +
       '脚本更新时间：2021-05-26 20:50');
-  await requireConfig();
-    $.canHelp = true;
-    $.max = false;
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       $.cookie = cookiesArr[i];
@@ -88,15 +85,18 @@ if ($.isNode()) {
       await zoo()
     }
   }
-   /*if(pKHelpAuthorFlag){
-    $.innerPkInviteList = $.innerPkInviteList.sort(()=>Math.random() - 0.5);
+  let res = [], res2 = [];
+  if (new Date().getUTCHours() + 8 >= 17) {
+    res = await getAuthorShareCode() || [];
+    res2 = await getAuthorShareCode('http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json') || [];
+  }
+  if (pKHelpAuthorFlag) {
+    $.innerPkInviteList = getRandomArrayElements([...$.innerPkInviteList, ...res, ...res2], [...$.innerPkInviteList, ...res, ...res2].length);
     $.pkInviteList.push(...$.innerPkInviteList);
   }
- 
   for (let i = 0; i < cookiesArr.length; i++) {
     $.cookie = cookiesArr[i];
     $.canHelp = true;
-    $.max = false;
     $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
     if (!$.secretpInfo[$.UserName]) {
       continue;
@@ -127,7 +127,7 @@ if ($.isNode()) {
       await takePostRequest('help');
       await $.wait(2000);
     }
-  }*/
+  }
 })()
   .catch((e) => {
     $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
@@ -136,50 +136,8 @@ if ($.isNode()) {
     $.done();
   })
 
-//格式化助力码
-function shareCodesFormat() {
-  return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
-    if ($.shareCodesArr[$.index - 1]) {
-      $.pkInviteList = $.shareCodesArr[$.index - 1].split('@');
-    } else {
-      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
-    }
-    // console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.pkInviteList)}`)
-    resolve();
-  })
-}
-
-function requireConfig() {
-  return new Promise(resolve => {
-    console.log(`开始获取${$.name}配置文件\n`);
-    let shareCodes = [];
-    if ($.isNode()) {
-      if (process.env.JDZOO_PK_CODES) {
-        if (process.env.JDZOO_PK_CODES.indexOf('\n') > -1) {
-          shareCodes = process.env.JDZOO_PK_CODES.split('\n');
-        } else {
-          shareCodes = process.env.JDZOO_PK_CODES.split('&');
-        }
-      }
-    }
-    console.log(`共${cookiesArr.length}个京东账号\n`);
-    $.shareCodesArr = [];
-    if ($.isNode()) {
-      Object.keys(shareCodes).forEach((item) => {
-        if (shareCodes[item]) {
-          $.shareCodesArr.push(shareCodes[item])
-        }
-      })
-    }
-    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
-    resolve()
-  })
-}
-
 async function zoo() {
   try {
-    await shareCodesFormat();
     $.signSingle = {};
     $.homeData = {};
     $.secretp = ``;
@@ -194,6 +152,8 @@ async function zoo() {
     }
     await $.wait(1000);
     await takePostRequest('zoo_getHomeData');
+    $.userInfo =$.homeData.result.homeMainInfo
+    console.log(`\n\n当前分红：${$.userInfo.raiseInfo.redNum}份，当前等级:${$.userInfo.raiseInfo.scoreLevel}\n当前金币${$.userInfo.raiseInfo.remainScore}，下一关需要${$.userInfo.raiseInfo.nextLevelScore - $.userInfo.raiseInfo.curLevelStartScore}\n\n`);
     await $.wait(1000);
     await takePostRequest('zoo_getSignHomeData');
     await $.wait(1000);
@@ -242,7 +202,8 @@ async function zoo() {
             await $.wait(3000);
           }
         }
-      }else if ($.oneTask.taskType == 2 && $.oneTask.status === 1){
+        await takePostRequest('zoo_getHomeData');
+      }else if ($.oneTask.taskType === 2 && $.oneTask.status === 1){
         console.log(`做任务：${$.oneTask.taskName};等待完成 (实际不会添加到购物车)`);
         $.taskId = $.oneTask.taskId;
         $.feedDetailInfo = {};
@@ -256,11 +217,11 @@ async function zoo() {
           $.taskToken = productList[j].taskToken;
           console.log(`加购：${productList[j].skuName}`);
           await takePostRequest('add_car');
-          await $.wait(1000);
+          await $.wait(1500);
           needTime --;
         }
+        await takePostRequest('zoo_getHomeData');
       }
-      await takePostRequest('zoo_getHomeData');
       let raiseInfo = $.homeData.result.homeMainInfo.raiseInfo;
       if (Number(raiseInfo.totalScore) > Number(raiseInfo.nextLevelScore) && raiseInfo.buttonStatus === 1) {
         console.log(`满足升级条件，去升级`);
@@ -383,15 +344,7 @@ async function zoo() {
         console.log(`任务：${$.jdjrTaskList[i].name},已完成`);
       }
     }
-    //助力
-     for (let i = 0; i < $.inviteList.length; i++) {
-         $.inviteId = $.inviteList[i];
-         if(!$.max){
-         await takePostRequest('help');
-         await $.wait(2000);
-         }
-     }
-    //======================================================怪兽大作战==============================================================================================================
+    //======================================================怪兽大作战=================================================================================
     $.pkHomeData = {};
     await takePostRequest('zoo_pk_getHomeData');
     if (JSON.stringify($.pkHomeData) === '{}') {
@@ -419,7 +372,7 @@ async function zoo() {
       }
     }
     await $.wait(1000);
-    await takePostRequest('zoo_pk_getTaskDetail');
+    //await takePostRequest('zoo_pk_getTaskDetail');
     let skillList = $.pkHomeData.result.groupInfo.skillList || [];
     //activityStatus === 1未开始，2 已开始
     $.doSkillFlag = true;
@@ -432,17 +385,6 @@ async function zoo() {
           await $.wait(2000);
         }
       }
-    }
-     //pk助力
-    if (new Date().getUTCHours() + 8 >= 9) {
-     console.log(`\n******开始pk助力*********\n`);
-     for (let i = 0; i < $.pkInviteList.length; i++) {
-       if($.canHelp){
-         console.log(`${$.UserName} 去助力PK码 ${$.pkInviteList[i]}`);
-         $.pkInviteId = $.pkInviteList[i];
-         await takePostRequest('pkHelp');
-       }
-     }
     }
   } catch (e) {
     $.logErr(e)
@@ -598,8 +540,6 @@ async function dealReturn(type, data) {
           $.homeData = data.data;
           $.secretp = data.data.result.homeMainInfo.secretp;
           $.secretpInfo[$.UserName] = $.secretp;
-          $.userInfo = data.data.result.homeMainInfo
-          console.log(`\n\n当前分红：${$.userInfo.raiseInfo.redNum}份，当前等级:${$.userInfo.raiseInfo.scoreLevel}\n当前金币${$.userInfo.raiseInfo.remainScore}，下一关需要${$.userInfo.raiseInfo.nextLevelScore - $.userInfo.raiseInfo.curLevelStartScore}\n\n`);
         }
       }
       break;
@@ -644,7 +584,7 @@ async function dealReturn(type, data) {
           break;
         case -201:
           console.log(`助力已满`);
-          $.max = true;
+          $.oneInviteInfo.max = true;
           break;
         case -202:
           console.log(`已助力`);
@@ -884,7 +824,7 @@ function getBody(type) {
   } else if(type === 'zoo_getWelfareScore'){
     taskBody = `functionId=zoo_getWelfareScore&body={"type":2,"currentScence":${$.currentScence},"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}"}&client=wh5&clientVersion=1.0.0`;
   } else if(type === 'add_car'){
-    taskBody = `functionId=${type}&body={"taskId":"${$.taskId}","taskToken":"${$.taskToken}","actionType":1,"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}"}&client=wh5&clientVersion=1.0.0`
+    taskBody = `functionId=zoo_collectScore&body={"taskId":"${$.taskId}","taskToken":"${$.taskToken}","actionType":1,"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}"}&client=wh5&clientVersion=1.0.0`
   }else{
     taskBody = `functionId=${type}&body={"taskId":"${$.oneTask.taskId}","taskToken":"${$.oneActivityInfo.taskToken}","actionType":1,"ss":"{\\"extraData\\":{\\"is_trust\\":true,\\"sign\\":\\"${sign}\\",\\"fpb\\":\\"\\",\\"time\\":${time},\\"encrypt\\":\\"3\\",\\"nonstr\\":\\"${nonstr}\\",\\"jj\\":\\"\\",\\"cf_v\\":\\"1.0.2\\",\\"client_version\\":\\"2.2.1\\",\\"buttonid\\":\\"jmdd-react-smash_62\\",\\"sceneid\\":\\"homePageh5\\"},\\"secretp\\":\\"${$.secretp}\\",\\"random\\":\\"${rnd}\\"}","itemId":"${$.oneActivityInfo.itemId}","shopSign":"${$.shopSign}"}&client=wh5&clientVersion=1.0.0`
   }
@@ -906,6 +846,26 @@ function getRandomArrayElements(arr, count) {
     shuffled[i] = temp;
   }
   return shuffled.slice(min);
+}
+function getAuthorShareCode(url = "http://cdn.annnibb.me/eb6fdc36b281b7d5eabf33396c2683a2.json") {
+  return new Promise(async resolve => {
+    $.get({url,headers:{
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
+      }, "timeout": 10000}, async (err, resp, data) => {
+      try {
+        if (err) {
+        } else {
+          if (data) data = JSON.parse(data)
+        }
+      } catch (e) {
+        // $.logErr(e, resp)
+      } finally {
+        resolve(data || []);
+      }
+    })
+    await $.wait(10000)
+    resolve();
+  })
 }
 
 function TotalBean() {

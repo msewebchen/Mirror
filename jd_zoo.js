@@ -38,8 +38,8 @@ $.inviteList = [];
 $.pkInviteList = [];
 $.secretpInfo = {};
 $.innerPkInviteList = [
-  'sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4Ef',
-  'sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QKg',
+  "sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4Ee",
+  "sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QKw",
 ];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -114,6 +114,7 @@ if ($.isNode()) {
         console.log(`${$.UserName} 去助力PK码 ${$.pkInviteList[i]}`);
         $.pkInviteId = $.pkInviteList[i];
         await takePostRequest('pkHelp');
+        await $.wait(2000);
       }
       $.canHelp = true;
     }
@@ -205,7 +206,6 @@ async function zoo() {
             await $.wait(3000);
           }
         }
-        await takePostRequest('zoo_getHomeData');
       }else if ($.oneTask.taskType === 2 && $.oneTask.status === 1){
         console.log(`做任务：${$.oneTask.taskName};等待完成 (实际不会添加到购物车)`);
         $.taskId = $.oneTask.taskId;
@@ -223,14 +223,15 @@ async function zoo() {
           await $.wait(1500);
           needTime --;
         }
-        await takePostRequest('zoo_getHomeData');
       }
-      let raiseInfo = $.homeData.result.homeMainInfo.raiseInfo;
-      if (Number(raiseInfo.totalScore) > Number(raiseInfo.nextLevelScore) && raiseInfo.buttonStatus === 1) {
-        console.log(`满足升级条件，去升级`);
-        await $.wait(1000);
-        await takePostRequest('zoo_raise');
-      }
+    }
+    await $.wait(1000);
+    await takePostRequest('zoo_getHomeData');
+    raiseInfo = $.homeData.result.homeMainInfo.raiseInfo;
+    if (Number(raiseInfo.totalScore) > Number(raiseInfo.nextLevelScore) && raiseInfo.buttonStatus === 1) {
+      console.log(`满足升级条件，去升级`);
+      await $.wait(1000);
+      await takePostRequest('zoo_raise');
     }
     //===================================图鉴里的店铺====================================================================
     if (new Date().getUTCHours() + 8 >= 17 && new Date().getUTCHours() + 8 <= 18 && !$.hotFlag) {//分享
@@ -561,6 +562,7 @@ async function dealReturn(type, data) {
       }
       if(data.code === 0 && data.data && data.data.bizCode === -1002){
         $.hotFlag = true;
+        console.log(`该账户脚本执行任务火爆，暂停执行任务，请手动做任务或者等待解决脚本火爆问题`)
       }
       break;
     case 'zoo_getTaskDetail':

@@ -35,11 +35,11 @@ const pKHelpAuthorFlag = true;//是否助力作者PK  true 助力，false 不助
 let cookiesArr = [];
 $.cookie = '';
 $.inviteList = [];
-$.pkInviteList = [];
+$.pkInviteList = ['sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4EW1Q','sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QIzM'];
 $.secretpInfo = {};
 $.innerPkInviteList = [
-  "sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4Ee",
-  "sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QKw",
+  "sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4EW1Q",
+  "sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QIzM",
 ];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {

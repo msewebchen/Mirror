@@ -93,7 +93,7 @@ if ($.isNode()) {
   if (!res3) await getAuthorShareCode('http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json')
   if (new Date().getHours()>= 17) {
     res = await getAuthorShareCode() || [];
-    res2 = await getAuthorShareCode('http://cdn.trueorfalse.top/e528ffae31d5407aac83b8c37a4c86bc/') || [];
+    res2 = await getAuthorShareCode('http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json') || [];
   }
   if (pKHelpAuthorFlag) {
     $.innerPkInviteList = getRandomArrayElements([...$.innerPkInviteList, ...res, ...res2, ...res3], [...$.innerPkInviteList, ...res, ...res2, ...res3].length);

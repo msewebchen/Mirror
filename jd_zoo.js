@@ -35,11 +35,11 @@ const pKHelpAuthorFlag = true;//是否助力作者PK  true 助力，false 不助
 let cookiesArr = [];
 $.cookie = '';
 $.inviteList = [];
-$.pkInviteList = ['sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4EV1Q','sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QIDM'];
+$.pkInviteList = ['sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4EV1g','sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QIDA'];
 $.secretpInfo = {};
 $.innerPkInviteList = [
-  "sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4EV1Q",
-  "sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QIDM",
+  "sSKNX-MpqKOOp-H_zMm2BJKDaM8C2gCmw4EV1g",
+  "sSKNX-MpqKOOp-H_zMm2BJKDb9g4mAT02ssV1Sd6NiG-4r3QIDA",
 ];
 if ($.isNode()) {
   Object.keys(jdCookieNode).forEach((item) => {
@@ -91,7 +91,7 @@ if ($.isNode()) {
   let res = [], res2 = [], res3 = [];
   res3 = await getAuthorShareCode('http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json');
   if (!res3) await getAuthorShareCode('http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json')
-  if (new Date().getHours()>= 17) {
+  if (new Date().getHours()>= 9) {
     res = await getAuthorShareCode() || [];
     res2 = await getAuthorShareCode('http://adguard.b.freefrp.net/eb6fdc36b281b7d5eabf33396c2683a2.json') || [];
   }

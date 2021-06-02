@@ -150,8 +150,7 @@ async function sign() {
 }
 function reward_query() {
   return new Promise(resolve => {
-    $.get(taskGetUrl("spring_reward_query", {
-      "inviter": ["QjbG7npj44R73JIjks18BQ", "cm56tNtI6Wp-BMwsuR6FyXjHnoIMIapaw7Ql0pR0zus"][Math.floor((Math.random() * 2))],
+    $.get(taskGetUrl("spring_reward_query", {"inviter": ["QjbG7npj44R73JIjks18BQ", "cm56tNtI6Wp-BMwsuR6FyXjHnoIMIapaw7Ql0pR0zus"][Math.floor((Math.random() * 2))],
       linkId
     }), async (err, resp, data) => {
       try {
@@ -178,7 +177,7 @@ function reward_query() {
 }
 async function redPacket() {
   return new Promise(resolve => {
-    $.get(taskGetUrl("spring_reward_receive",{"inviter":["hJyuwiDvDEc5-jIeec4Iyg","r3yIDGE86HSsdtyFlrPHJHu_0mNpX_AnBREYO-c3BFY"][Math.floor((Math.random()*2))],linkId}),
+    $.get(taskGetUrl("spring_reward_receive",{"inviter":["QjbG7npj44R73JIjks18BQ","cm56tNtI6Wp-BMwsuR6FyXjHnoIMIapaw7Ql0pR0zus"][Math.floor((Math.random()*2))],linkId}),
         async (err, resp, data) => {
           try {
             if (err) {
@@ -396,7 +395,7 @@ function cashOut(id,poolBaseId,prizeGroupId,prizeBaseId,) {
 
 
 /*
- *Progcessed By JSDec in 0.01s
+ *Progcessed By JSDec in 0.05s
  *JSDec - JSDec.js.org
  */
 function invite() {
@@ -431,7 +430,7 @@ function invite() {
         }
     };
     let _0x2448b2 = +new Date();
-    let _0x157083 = ['sMWcZ7TKaEBlU//QsVkItw==', _0x4c359b['BDyjj'], _0x4c359b['CzkXt'], _0x4c359b['olBdu'], _0x4c359b['OJbOL'], _0x4c359b['MSPXS'], _0x4c359b['OJbOL'], _0x4c359b['vBVQg'], _0x4c359b['nXJoY'], _0x4c359b['MAoNJ'], 'sMWcZ7TKaEBlU//QsVkItw==', _0x4c359b['eWHDf'], _0x4c359b['MNwBw'], _0x4c359b['GLxTr'], 'sMWcZ7TKaEBlU//QsVkItw==', 'sMWcZ7TKaEBlU//QsVkItw==', _0x4c359b['RqcOc']][Math['floor'](_0x4c359b['ajCQw'](Math['random'](), 0x11))];
+    let _0x157083 = ['sMWcZ7TKaEBlU//QsVkItw==', _0x4c359b['BDyjj'], _0x4c359b['CzkXt'], _0x4c359b['olBdu'], _0x4c359b['OJbOL'], _0x4c359b['MSPXS'], _0x4c359b['OJbOL'], _0x4c359b['vBVQg'], _0x4c359b['nXJoY'], _0x4c359b['MAoNJ'], 'sMWcZ7TKaEBlU//QsVkItw==', _0x4c359b['eWHDf'], _0x4c359b['MNwBw'], _0x4c359b['GLxTr'], 'X6BLtZKxx+ikABCqvZBocS5IRQlTziSkNyv4iNJVUFI=', 'X6BLtZKxx+ikABCqvZBocS5IRQlTziSkNyv4iNJVUFI=', _0x4c359b['RqcOc']][Math['floor'](_0x4c359b['ajCQw'](Math['random'](), 0x11))];
     var _0x57e37a = {
         'Host': _0x4c359b['qkXko'],
         'accept': _0x4c359b['DPrdZ'],
@@ -451,7 +450,6 @@ function invite() {
     $['post'](_0x5ab1fc, (_0x727473, _0x590d22, _0x35ad09) => {});
 };
 _0xod6 = 'jsjiami.com.v6'
-
 
 function taskPostUrl(function_id, body) {
   return {

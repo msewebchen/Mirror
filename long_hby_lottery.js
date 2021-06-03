@@ -50,10 +50,10 @@ const JD_API_HOST = 'https://api.m.jd.com';
     }
 
     let hour = new Date().getHours()
-    if (hour < 20 || hour > 21) {
-        $.msg($.name, '不在活动时间范围内(20点-21点)', '不在活动时间范围内(20点-21点)');
-        return;
-    }
+   // if (hour < 20 || hour > 21) {
+   //     $.msg($.name, '不在活动时间范围内(20点-21点)', '不在活动时间范围内(20点-21点)');
+   //     return;
+   // }
 
     for (let i = 0; i < cookiesArr.length; i++) {
         if (cookiesArr[i]) {

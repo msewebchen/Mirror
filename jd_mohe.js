@@ -36,7 +36,7 @@ if ($.isNode()) {
 }
 
 const JD_API_HOST = 'https://isp5g.m.jd.com';
-//邀请码一天一变化，已确定
+//邀请码可能一天一变化
 $.shareId = [];
 !(async () => {
   if (!cookiesArr[0]) {
@@ -47,7 +47,8 @@ $.shareId = [];
       '活动地址: https://isp5g.m.jd.com\n' +
       '活动时间：2021-06-2到2021-07-31\n' +
       '更新时间：2021-06-3 12:00');
-  await updateShareCodesCDN()
+// await updateShareCodesCDN()
+await requireConfig();
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       cookie = cookiesArr[i];
@@ -73,14 +74,17 @@ $.shareId = [];
         task1(),
       ])
       await taskList();
-      await getAward();//抽奖
+       console.log(`当前时间 ${new Date().getHours()}`)
+       if (new Date().getHours() == 16){
+            await getAward();//抽奖
+       }
     }
   }
   if (allMessage) {
     if ($.isNode()) await notify.sendNotify($.name, allMessage);
     $.msg($.name, '', allMessage, {"open-url": "https://isp5g.m.jd.com"})
   }
-  $.shareId = [...($.shareId || []), ...($.updatePkActivityIdRes || [])];
+  await shareCodesFormat();
   for (let v = 0; v < cookiesArr.length; v++) {
     cookie = cookiesArr[v];
     $.index = v + 1;
@@ -103,6 +107,46 @@ $.shareId = [];
       $.done();
     })
 
+
+//格式化助力码
+function shareCodesFormat() {
+  return new Promise(async resolve => {
+    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
+    if ($.shareCodesArr[$.index - 1]) {
+      $.shareId = $.shareCodesArr[$.index - 1].split('@');
+    } else {
+    }
+    // console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.pkInviteList)}`)
+    resolve();
+  })
+}
+
+function requireConfig() {
+  return new Promise(resolve => {
+    console.log(`开始获取${$.name}配置文件\n`);
+    let shareCodes = [];
+    if ($.isNode()) {
+      if (process.env.JD_MH_CODES) {
+        if (process.env.JD_MH_CODES.indexOf('\n') > -1) {
+          shareCodes = process.env.JD_MH_CODES.split('\n');
+        } else {
+          shareCodes = process.env.JD_MH_CODES.split('&');
+        }
+      }
+    }
+    console.log(`共${cookiesArr.length}个京东账号\n`);
+    $.shareCodesArr = [];
+    if ($.isNode()) {
+      Object.keys(shareCodes).forEach((item) => {
+        if (shareCodes[item]) {
+          $.shareCodesArr.push(shareCodes[item])
+        }
+      })
+    }
+    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
+    resolve()
+  })
+}
 
 async function task0() {
   const confRes = await conf();
@@ -393,7 +437,7 @@ async function getAward() {
           console.log(`====抽奖结果====,${JSON.stringify(lotteryRes.data)}`);
           console.log(lotteryRes.data.name);
           console.log(lotteryRes.data.beanNum);
-          if ((lotteryRes.data['prizeId'] && lotteryRes.data['prizeId'] !== '9999') || lotteryRes.data.name !== '未中奖') {
+          if (lotteryRes.data['prizeId'] && (lotteryRes.data['type'] !== '99' && lotteryRes.data['type'] !== '3' && lotteryRes.data['type'] !== '8'  && lotteryRes.data['type'] !== '9')) {
             message += `抽奖获得：${lotteryRes.data.name}\n`;
           }
         } else if (lotteryRes.code === 4001) {
@@ -477,8 +521,7 @@ function shareUrl() {
         }
         // console.log('homeGoBrowse', data)
         if (data['code'] === 200) {
-          if (data['data']) $.shareId.push(data['data']);
-          console.log(`\n【京东账号${$.index}（${$.nickName || $.UserName}）的${$.name}好友互助码】${data['data']}\n`);
+          console.log(`盲盒互助码：${data['data']}\n`);
           console.log(`此邀请码一天一变化，旧的不可用`)
         }
       } catch (e) {

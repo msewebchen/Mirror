@@ -179,34 +179,7 @@ function getid(functionid,source) {
         });
     });
 }
-function getsignid() {
-    return new Promise(async (resolve) => {
-        const options = taskPostUrl("superBrandSecondFloorMainPage", `{"source":"secondfloor"}`)
-        //  console.log(options)
-        $.post(options, async (err, resp, data) => {
-            try {
-                if (err) {
-                    console.log(`${JSON.stringify(err)}`);
-                    console.log(`${$.name} API请求失败，请检查网路重试`);
-                } else {
-                    data = JSON.parse(data);
-              //      console.log(data)
-                   if ( data.data && data.code === "0") {
-                        $.actid = data.data.result.activityBaseInfo.activityId
-                        $.actname=data.data.result.activityBaseInfo.activityName
-                        $.enpid = data.data.result.activityBaseInfo.encryptProjectId
-                        console.log(`当前活动：${actname}  ${$.actid}`)
-                    }
 
-                }
-            } catch (e) {
-                $.logErr(e, resp);
-            } finally {
-                resolve();
-            }
-        });
-    });
-}
 
 function getCode() {
     return new Promise(async (resolve) => {

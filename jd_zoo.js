@@ -63,9 +63,6 @@ if ($.isNode()) {
       '活动时间：2021-05-24至2021-06-20\n' +
       '脚本更新时间：2021-06-03 9:30\n'
       );
-  await requireConfig();
-    $.canHelp = true;
-    $.max = false;
   for (let i = 0; i < cookiesArr.length; i++) {
     if (cookiesArr[i]) {
       $.cookie = cookiesArr[i];
@@ -88,15 +85,20 @@ if ($.isNode()) {
       if($.hotFlag)$.secretpInfo[$.UserName] = false;//火爆账号不执行助力
     }
   }
-   /*if(pKHelpAuthorFlag){
-    $.innerPkInviteList = $.innerPkInviteList.sort(()=>Math.random() - 0.5);
+  let res = [], res2 = [], res3 = [];
+  res3 = await getAuthorShareCode('http://adguard.b.freefrp.net/jd_zoo.json');
+  if (!res3) await getAuthorShareCode('http://adguard.b.freefrp.net/jd_zoo.json')
+  if (new Date().getHours()>= 9) {
+    res = await getAuthorShareCode() || [];
+    res2 = await getAuthorShareCode('http://adguard.b.freefrp.net/jd_zoo.json') || [];
+  }
+  if (pKHelpAuthorFlag) {
+    $.innerPkInviteList = getRandomArrayElements([...$.innerPkInviteList, ...res, ...res2, ...res3], [...$.innerPkInviteList, ...res, ...res2, ...res3].length);
     $.pkInviteList.push(...$.innerPkInviteList);
   }
- 
   for (let i = 0; i < cookiesArr.length; i++) {
     $.cookie = cookiesArr[i];
     $.canHelp = true;
-    $.max = false;
     $.UserName = decodeURIComponent($.cookie.match(/pt_pin=([^; ]+)(?=;?)/) && $.cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1]);
     if (!$.secretpInfo[$.UserName]) {
       continue;
@@ -128,7 +130,7 @@ if ($.isNode()) {
       await takePostRequest('help');
       await $.wait(2000);
     }
-  }*/
+  }
 })()
   .catch((e) => {
     $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
@@ -137,50 +139,8 @@ if ($.isNode()) {
     $.done();
   })
 
-//格式化助力码
-function shareCodesFormat() {
-  return new Promise(async resolve => {
-    // console.log(`第${$.index}个京东账号的助力码:::${$.shareCodesArr[$.index - 1]}`)
-    if ($.shareCodesArr[$.index - 1]) {
-      $.pkInviteList = $.shareCodesArr[$.index - 1].split('@');
-    } else {
-      console.log(`由于您第${$.index}个京东账号未提供shareCode,将采纳本脚本自带的助力码\n`)
-    }
-    // console.log(`第${$.index}个京东账号将要助力的好友${JSON.stringify($.pkInviteList)}`)
-    resolve();
-  })
-}
-
-function requireConfig() {
-  return new Promise(resolve => {
-    console.log(`开始获取${$.name}配置文件\n`);
-    let shareCodes = [];
-    if ($.isNode()) {
-      if (process.env.JDZOO_PK_CODES) {
-        if (process.env.JDZOO_PK_CODES.indexOf('\n') > -1) {
-          shareCodes = process.env.JDZOO_PK_CODES.split('\n');
-        } else {
-          shareCodes = process.env.JDZOO_PK_CODES.split('&');
-        }
-      }
-    }
-    console.log(`共${cookiesArr.length}个京东账号\n`);
-    $.shareCodesArr = [];
-    if ($.isNode()) {
-      Object.keys(shareCodes).forEach((item) => {
-        if (shareCodes[item]) {
-          $.shareCodesArr.push(shareCodes[item])
-        }
-      })
-    }
-    console.log(`您提供了${$.shareCodesArr.length}个账号的${$.name}助力码\n`);
-    resolve()
-  })
-}
-
 async function zoo() {
   try {
-    await shareCodesFormat();
     $.signSingle = {};
     $.homeData = {};
     $.secretp = ``;
@@ -245,24 +205,25 @@ async function zoo() {
             await $.wait(3000);
           }
         }
-      }else if ($.oneTask.taskType === 2 && $.oneTask.status === 1){
-        console.log(`做任务：${$.oneTask.taskName};等待完成 (实际不会添加到购物车)`);
-        $.taskId = $.oneTask.taskId;
-        $.feedDetailInfo = {};
-        await takePostRequest('zoo_getFeedDetail');
-        let productList = $.feedDetailInfo.productInfoVos;
-        let needTime = Number($.feedDetailInfo.maxTimes) - Number($.feedDetailInfo.times);
-        for (let j = 0; j < productList.length && needTime > 0; j++) {
-          if(productList[j].status !== 1){
-            continue;
-          }
-          $.taskToken = productList[j].taskToken;
-          console.log(`加购：${productList[j].skuName}`);
-          await takePostRequest('add_car');
-          await $.wait(1500);
-          needTime --;
-        }
       }
+      // else if ($.oneTask.taskType === 2 && $.oneTask.status === 1){
+      //   console.log(`做任务：${$.oneTask.taskName};等待完成 (实际不会添加到购物车)`);
+      //   $.taskId = $.oneTask.taskId;
+      //   $.feedDetailInfo = {};
+      //   await takePostRequest('zoo_getFeedDetail');
+      //   let productList = $.feedDetailInfo.productInfoVos;
+      //   let needTime = Number($.feedDetailInfo.maxTimes) - Number($.feedDetailInfo.times);
+      //   for (let j = 0; j < productList.length && needTime > 0; j++) {
+      //     if(productList[j].status !== 1){
+      //       continue;
+      //     }
+      //     $.taskToken = productList[j].taskToken;
+      //     console.log(`加购：${productList[j].skuName}`);
+      //     await takePostRequest('add_car');
+      //     await $.wait(1500);
+      //     needTime --;
+      //   }
+      // }
     }
     await $.wait(1000);
     await takePostRequest('zoo_getHomeData');
@@ -272,9 +233,8 @@ async function zoo() {
       await $.wait(1000);
       await takePostRequest('zoo_raise');
     }
-    console.log(`当前时间 ${new Date().getHours()+8}`)
     //===================================图鉴里的店铺====================================================================
-    if (new Date().getHours()+8 >= 17 && new Date().getHours()+8 <= 18 && !$.hotFlag) {//分享
+    if (new Date().getHours()>= 17 && new Date().getHours()<= 18 && !$.hotFlag) {//分享
       $.myMapList = [];
       await takePostRequest('zoo_myMap');
       for (let i = 0; i < $.myMapList.length; i++) {
@@ -286,7 +246,7 @@ async function zoo() {
         }
       }
     }
-    if (new Date().getHours()+8 >= 14 && new Date().getHours()+8 <= 17 && !$.hotFlag){//30个店铺，为了避免代码执行太久，下午2点到5点才做店铺任务
+    if (new Date().getHours() >= 14 && new Date().getHours() <= 17 && !$.hotFlag){//30个店铺，为了避免代码执行太久，下午2点到5点才做店铺任务
       console.log(`去做店铺任务`);
       $.shopInfoList = [];
       await takePostRequest('qryCompositeMaterials');
@@ -388,15 +348,7 @@ async function zoo() {
         console.log(`任务：${$.jdjrTaskList[i].name},已完成`);
       }
     }
-    //助力
-     for (let i = 0; i < $.inviteList.length; i++) {
-         $.inviteId = $.inviteList[i];
-         if(!$.max){
-         await takePostRequest('help');
-         await $.wait(2000);
-         }
-     }
-    //======================================================怪兽大作战==============================================================================================================
+    //======================================================怪兽大作战=================================================================================
     $.pkHomeData = {};
     await takePostRequest('zoo_pk_getHomeData');
     if (JSON.stringify($.pkHomeData) === '{}') {
@@ -437,17 +389,6 @@ async function zoo() {
           await $.wait(2000);
         }
       }
-    }
-     //pk助力
-    if (new Date().getUTCHours() + 8 >= 9) {
-     console.log(`\n******开始pk助力*********\n`);
-     for (let i = 0; i < $.pkInviteList.length; i++) {
-       if($.canHelp){
-         console.log(`${$.UserName} 去助力PK码 ${$.pkInviteList[i]}`);
-         $.pkInviteId = $.pkInviteList[i];
-         await takePostRequest('pkHelp');
-       }
-     }
     }
   } catch (e) {
     $.logErr(e)
@@ -653,7 +594,7 @@ async function dealReturn(type, data) {
           break;
         case -201:
           console.log(`助力已满`);
-          $.max = true;
+          $.oneInviteInfo.max = true;
           break;
         case -202:
           console.log(`已助力`);
@@ -673,7 +614,7 @@ async function dealReturn(type, data) {
     case 'zoo_pk_getHomeData':
       if (data.code === 0) {
         console.log(`PK互助码：${data.data.result.groupInfo.groupAssistInviteId}`);
-        //if (data.data.result.groupInfo.groupAssistInviteId) $.pkInviteList.push(data.data.result.groupInfo.groupAssistInviteId);
+        if (data.data.result.groupInfo.groupAssistInviteId) $.pkInviteList.push(data.data.result.groupInfo.groupAssistInviteId);
         $.pkHomeData = data.data;
       }
       break;
@@ -910,6 +851,43 @@ function getRandomArrayElements(arr, count) {
   }
   return shuffled.slice(min);
 }
+function getAuthorShareCode(url = "http://cdn.annnibb.me/eb6fdc36b281b7d5eabf33396c2683a2.json") {
+  return new Promise(async resolve => {
+    const options = {
+      "url": `${url}?${new Date()}`,
+      "timeout": 10000,
+      "headers": {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1 Edg/87.0.4280.88"
+      }
+    };
+    if ($.isNode() && process.env.TG_PROXY_HOST && process.env.TG_PROXY_PORT) {
+      const tunnel = require("tunnel");
+      const agent = {
+        https: tunnel.httpsOverHttp({
+          proxy: {
+            host: process.env.TG_PROXY_HOST,
+            port: process.env.TG_PROXY_PORT * 1
+          }
+        })
+      }
+      Object.assign(options, { agent })
+    }
+    $.get(options, async (err, resp, data) => {
+      try {
+        if (err) {
+        } else {
+          if (data) data = JSON.parse(data)
+        }
+      } catch (e) {
+        // $.logErr(e, resp)
+      } finally {
+        resolve(data || []);
+      }
+    })
+    await $.wait(10000)
+    resolve();
+  })
+}
 
 function TotalBean() {
   return new Promise(async resolve => {
@@ -953,7 +931,7 @@ function TotalBean() {
   })
 }
 /*
- *Progcessed By JSDec in 0.26s
+ *Progcessed By JSDec in 0.73s
  *JSDec - JSDec.js.org
  */
 function randomWord(_0x467430, _0x28d47a, _0x2918d7) {

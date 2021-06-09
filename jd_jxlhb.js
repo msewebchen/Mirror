@@ -35,6 +35,7 @@ if ($.isNode()) {
     ...$.toObj($.getdata("CookiesJD") || "[]").map((item) => item.cookie)].filter((item) => !!item);
 }
 $.packetIdArr = [];
+$.activeId = '489177';
 const BASE_URL = 'https://wq.jd.com/cubeactive/steprewardv3'
 
 
@@ -47,9 +48,10 @@ const BASE_URL = 'https://wq.jd.com/cubeactive/steprewardv3'
       '活动入口：京喜app-》我的-》京喜领88元红包\n' +
       '助力逻辑：先自己京东账号相互助力，如有剩余助力机会，则助力作者\n' +
       '温馨提示：如提示助力火爆，可尝试寻找京东客服')
-  let res = await getAuthorShareCode('http://adguard.b.freefrp.net/jxhb.json') || [];
+  let res = await getAuthorShareCode() || [];
   let res2 = await getAuthorShareCode('http://adguard.b.freefrp.net/jxhb.json') || [];
-  $.authorMyShareIds = [...res, ...res2];
+  if (res && res.activeId) $.activeId = res.activeId;
+  $.authorMyShareIds = [...((res && res.codes) || []), ...res2];
   //开启红包,获取互助码
   for (let i = 0; i < cookiesArr.length; i++) {
     $.index = i + 1;
@@ -60,9 +62,7 @@ const BASE_URL = 'https://wq.jd.com/cubeactive/steprewardv3'
     await main();
   }
   //互助
-  let shareCode = [];
-  $.packetIdArr.map(item => shareCode.push(item['strUserPin']));
-  console.log(`\n\n自己京东账号助力码：\n${JSON.stringify(shareCode)}\n\n`);
+  console.log(`\n\n自己京东账号助力码：\n${JSON.stringify($.packetIdArr)}\n\n`);
   console.log(`\n开始助力：助力逻辑 先自己京东相互助力，如有剩余助力机会，则助力作者\n`)
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
@@ -90,7 +90,6 @@ const BASE_URL = 'https://wq.jd.com/cubeactive/steprewardv3'
     }
   }
   //拆红包
-  console.log(`\n【${$.UserName}】开始拆红包\n`);
   for (let i = 0; i < cookiesArr.length; i++) {
     cookie = cookiesArr[i];
     $.canOpenGrade = true;
@@ -98,6 +97,7 @@ const BASE_URL = 'https://wq.jd.com/cubeactive/steprewardv3'
     const grades = [1, 2, 3, 4, 5, 6];
     for (let grade of grades) {
       if (!$.canOpenGrade) break;
+      if (!$.packetIdArr[i]) continue;
       console.log(`\n【${$.UserName}】去拆第${grade}个红包`);
       await openRedPack($.packetIdArr[i]['strUserPin'], grade);
       await $.wait(1000);
@@ -276,46 +276,43 @@ function getAuthorShareCode(url = "http://adguard.b.freefrp.net/jxhb.json") {
     })
   })
 }
-
+//关键地方
 /*
  *Progcessed By JSDec in 0.01s
  *JSDec - JSDec.js.org
  */
-function taskurl(_0x3805df, _0x1ebb69 = '', _0x1a9706) {
-    var _0x4a8ea1 = {
-        'cKSxD': function(_0x1855b2, _0x581a2d) {
-            return _0x1855b2 + _0x581a2d;
+function taskurl(_0x10552c, _0x55ed91 = '', _0x53d809) {
+    var _0x195ffb = {
+        'fJuUC': function(_0x3e4e56, _0xb2386d) {
+            return _0x3e4e56 + _0xb2386d;
         },
-        'cpUFl': function(_0x336159, _0x10205c) {
-            return _0x336159 + _0x10205c;
+        'QSfPY': function(_0x5c5b33, _0x35de7a) {
+            return _0x5c5b33(_0x35de7a);
         },
-        'dFrEY': function(_0x465200, _0x5e0e91) {
-            return _0x465200 + _0x5e0e91;
-        },
-        'PrvoU': 'wq.jd.com',
-        'TdGlK': '*/*'
+        'YDCux': 'wq.jd.com',
+        'RlBCI': '*/*',
+        'CAsfi': 'https://wqactive.jd.com/cube/front/activePublish/step_reward/489177.html?aid=489177'
     };
-    let _0x3d5b0d = BASE_URL + '/' + _0x3805df + '?activeId=489177&publishFlag=1&channel=7&' + _0x1ebb69 + '&sceneval=2&g_login_type=1&timestamp=' + Date['now']() + '&_=' + (Date['now']() + 0x2) + '&_ste=1';
-    const _0x3a583b = _0x4a8ea1['cKSxD'](_0x4a8ea1['cKSxD'](Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa)) + Math['random']()['toString'](0x24)['slice'](0x2, 0xa) + Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa));
-    _0x3d5b0d += '&phoneid=' + _0x3a583b;
-    _0x3d5b0d += '&stepreward_jstoken=' + (_0x4a8ea1['cpUFl'](_0x4a8ea1['dFrEY'](Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa)), Math['random']()['toString'](0x24)['slice'](0x2, 0xa)) + Math['random']()['toString'](0x24)['slice'](0x2, 0xa));
-    if (_0x1a9706) {
-        _0x3d5b0d += '&_stk=' + encodeURIComponent(_0x1a9706);
+    let _0x19d082 = BASE_URL + '/' + _0x10552c + '?activeId=' + $['activeId'] + '&publishFlag=1&channel=7&' + _0x55ed91 + '&sceneval=2&g_login_type=1&timestamp=' + Date['now']() + '&_=' + (Date['now']() + 0x2) + '&_ste=1';
+    const _0x3968f3 = _0x195ffb['fJuUC'](_0x195ffb['fJuUC'](_0x195ffb['fJuUC'](Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa)) + Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa)), Math['random']()['toString'](0x24)['slice'](0x2, 0xa));
+    _0x19d082 += '&phoneid=' + _0x3968f3;
+    _0x19d082 += '&stepreward_jstoken=' + _0x195ffb['fJuUC'](_0x195ffb['fJuUC'](Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa)) + Math['random']()['toString'](0x24)['slice'](0x2, 0xa), Math['random']()['toString'](0x24)['slice'](0x2, 0xa));
+    if (_0x53d809) {
+        _0x19d082 += '&_stk=' + _0x195ffb['QSfPY'](encodeURIComponent, _0x53d809);
     }
-    console['log'](_0x3d5b0d);
     return {
-        'url': _0x3d5b0d,
+        'url': _0x19d082,
         'headers': {
-            'Host': _0x4a8ea1['PrvoU'],
+            'Host': _0x195ffb['YDCux'],
             'Cookie': cookie,
-            'accept': _0x4a8ea1['TdGlK'],
-            'user-agent': 'jdpingou;iPhone;4.8.2;14.5.1;' + _0x3a583b + ';network/wifi;model/iPhone13,4;appBuild/100546;ADID/00000000-0000-0000-0000-000000000000;supportApplePay/1;hasUPPay/0;pushNoticeIsOpen/0;hasOCPay/0;supportBestPay/0;session/318;pap/JA2019_3111789;brand/apple;supportJDSHWK/1;Mozilla/5.0 (iPhone; CPU iPhone OS 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+            'accept': _0x195ffb['RlBCI'],
+            'user-agent': 'jdpingou;iPhone;4.8.2;14.5.1;' + _0x3968f3 + ';network/wifi;model/iPhone13,4;appBuild/100546;ADID/00000000-0000-0000-0000-000000000000;supportApplePay/1;hasUPPay/0;pushNoticeIsOpen/0;hasOCPay/0;supportBestPay/0;session/318;pap/JA2019_3111789;brand/apple;supportJDSHWK/1;Mozilla/5.0 (iPhone; CPU iPhone OS 14_5_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
             'accept-language': 'zh-cn',
-            'referer': 'https://wqactive.jd.com/cube/front/activePublish/step_reward/489177.html?aid=489177'
+            'referer': _0x195ffb['CAsfi']
         }
     };
 };
-_0xodv = 'jsjiami.com.v6'
+_0xod9 = 'jsjiami.com.v6'
 
 function TotalBean() {
   return new Promise(async resolve => {
